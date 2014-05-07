@@ -1,0 +1,22 @@
+Public Monetary Costs
+Paying taxes/fees to repair flood damage to roads, sidewalks and other public areas	publicCost 0
+Paying taxes/fees to install interventions to reduce flooding of roads, sidewalks and other public areas	publicCost 2
+Paying for maintenance for these interventions with taxes/fees	publicCost 1
+Private Monetary Costs
+Paying to repair flooding damages to your property	privateCost 0
+Paying to install interventions to reduce flooding in your property	privateCost 1
+Paying to maintain these interventions	privateCost 2
+Public Benefits
+The amount of rainwater that will be captured by new interventions in your neighborhood	efficiencyOfIntervention
+The time it takes for driving and walking conditions to return to normal after a storm	puddleTime
+The ability of the interventions to reduce rainwater going into sewers	redirectSewers
+Amount of water returned to the groundwater	groundwaterInfiltration
+Personal Benefits
+Ability to reuse rainwater for household chores (washing cars, watering lawns)	waterReuse
+Personal Costs
+The trouble of walking or driving through flooded city sidewalks or streets	streetClosureInconvenience 0
+The trouble of street/sidewalk closures during construction of new interventions	streetClosureInconvenience 1
+Visual appearance of any interventions to reduce flooding	visualAppearence
+Effects of Neighborhoods
+The effect of rainwater from nearby neighborhoods flooding your neighborhood	impactingMyNeighbors
+The effect of rainwater from your neighborhood flooding nearby neighborhoods	neighborsImpactingMe
