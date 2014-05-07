@@ -138,7 +138,9 @@ NSMutableDictionary * segConToVar;
      documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
      fileName = [documentsDirectory stringByAppendingPathComponent:@"surveySave.txt"];
     
-    //create file if it doesn't exist
+    NSLog (@"%@", content);
+    
+    //delete file if it does exist -- then create it
     if([[NSFileManager defaultManager] fileExistsAtPath:fileName]){
         [[NSFileManager defaultManager] removeItemAtPath:fileName error: NULL];
     
@@ -180,20 +182,31 @@ NSMutableDictionary * segConToVar;
 
 - (IBAction)loadAnswers:(id)sender {
     NSLog(@"Button pressed");
-    NSString* path = [[NSBundle mainBundle] pathForResource:@"surveySave"
-                                                     ofType:@"txt"];
+    NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *path = [documentsDirectory stringByAppendingPathComponent:@"surveySave.txt"];
+
+    NSLog(@"%@", path);
     NSString *experienceQuestions = [NSString stringWithContentsOfFile:path encoding: NSUTF8StringEncoding error:nil];
+    NSLog(@"%@", experienceQuestions);
     if (experienceQuestions.length > 0){
         
         NSArray * expQuestions = [experienceQuestions componentsSeparatedByString:@"\n"];
         for (int i = 0; i < expQuestions.count; i++){
+            if([[[expQuestions objectAtIndex:i] componentsSeparatedByString:@","] count ] > 1){
             NSString * key = [[[expQuestions objectAtIndex:i] componentsSeparatedByString:@","] objectAtIndex:0];
             UISegmentedControl * sc = [segConToVar objectForKey: key];
-            sc.selectedSegmentIndex = [[[[expQuestions objectAtIndex:i] componentsSeparatedByString:@","] objectAtIndex:1] stringByTrimmingCharactersInSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] ] intValue ];
+            sc.selectedSegmentIndex = [[[[[expQuestions objectAtIndex:i] componentsSeparatedByString:@","] objectAtIndex:1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet] ] intValue ];
+            }
         }
     }
     
 }
 
+- (IBAction)resetSegment:(id)sender {
+    for ( NSString * key in segConToVar ){
+        UISegmentedControl *sc =[segConToVar objectForKey: key];
+        [sc setSelectedSegmentIndex: UISegmentedControlNoSegment];
+    }
+}
 
 @end
