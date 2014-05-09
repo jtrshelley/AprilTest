@@ -59,7 +59,7 @@ int trialNum = 0;
     UILabel *valueLabel = [[UILabel alloc] init];
     valueLabel.text = @"Map and Score";
     valueLabel.frame =CGRectMake(20, 55, 0, 0);
-    valueLabel.font = [UIFont systemFontOfSize:16.0];
+    valueLabel.font = [UIFont boldSystemFontOfSize:16.0];
     [valueLabel sizeToFit ];
     valueLabel.textColor = [UIColor blackColor];
     [self.view addSubview:valueLabel];
@@ -90,6 +90,7 @@ int trialNum = 0;
     [self drawTitles];
     [_dataWindow setContentOffset:CGPointMake(0, 0)];
     [_mapWindow setContentOffset:CGPointMake(0,0 )];
+    [_dataWindow flashScrollIndicators];
     
 
 }
@@ -274,6 +275,9 @@ int trialNum = 0;
     scoreLabel.textColor = [UIColor blackColor];
     [_mapWindow addSubview:scoreLabel];
     
+    
+    [_dataWindow flashScrollIndicators];          
+    
 }
 
 -(void) drawTextBasedVar: (NSString *) outputValue withConcernPosition: (int) concernPos andyValue: (int) yValue{
@@ -302,8 +306,8 @@ int trialNum = 0;
         AprilTestVariable * currentVar =[sortedArray objectAtIndex:i];
         UILabel * currentVarLabel = [[UILabel alloc] init];
                 if (visibleIndex % 2 == 0) currentVarLabel.backgroundColor = [UIColor colorWithRed:.8 green:.9 blue:1.0 alpha:.5];
-        currentVarLabel.frame = CGRectMake(width, 5, currentVar.widthOfVisualization - 10, 38);
-        currentVarLabel.font = [UIFont systemFontOfSize:16.0];
+        currentVarLabel.frame = CGRectMake(width, 2, currentVar.widthOfVisualization - 10, 40);
+        currentVarLabel.font = [UIFont boldSystemFontOfSize:16.0];
         if([currentVar.name compare: @"publicCost"] == NSOrderedSame){
             currentVarLabel.text = @"  Public Cost";
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
@@ -328,6 +332,8 @@ int trialNum = 0;
         }
         width+= currentVar.widthOfVisualization;
     }
+    
+    [_dataWindow setContentSize: CGSizeMake(width + 10, _dataWindow.contentSize.height)];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {

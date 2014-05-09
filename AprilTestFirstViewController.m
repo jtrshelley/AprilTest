@@ -29,7 +29,7 @@ NSMutableDictionary * segConToVar;
     NSString* path = [[NSBundle mainBundle] pathForResource:@"questions1"
                                                      ofType:@"txt"];
     NSString *experienceQuestions = [NSString stringWithContentsOfFile:path encoding: NSUTF8StringEncoding error:nil];
-    UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(6, 15, 0, 30)];
+    UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 15, 0, 30)];
     questionLabel.text = @"How many times have you you experienced the following in your home or business?";
     [questionLabel setFont: [UIFont boldSystemFontOfSize:17.0]];
     [questionLabel sizeToFit];
@@ -41,7 +41,7 @@ NSMutableDictionary * segConToVar;
             discriminatoryAssist.backgroundColor = [UIColor colorWithRed:.7 green:.9 blue:.9 alpha:.3];
             [_surveyView addSubview: discriminatoryAssist];
         }
-        UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(14, 40 + (i * 30), 0, 30)];
+        UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 40 + (i * 30), 0, 30)];
         questionLabel.text = [[[expQuestions objectAtIndex:i] componentsSeparatedByString:@"\t"] objectAtIndex:0];
         [questionLabel setFont: [UIFont systemFontOfSize:14]];
         [questionLabel sizeToFit];
@@ -62,7 +62,7 @@ NSMutableDictionary * segConToVar;
     path = [[NSBundle mainBundle] pathForResource:@"questions2"
                                                      ofType:@"txt"];
     NSString *importanceQuestions = [NSString stringWithContentsOfFile:path encoding: NSUTF8StringEncoding error:nil];
-    UILabel *importLabel = [[UILabel alloc] initWithFrame:CGRectMake(6, lastExpQ, 0, 30)];
+    UILabel *importLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, lastExpQ, 0, 30)];
     importLabel.text = @"How important are the following to you?";
     [importLabel setFont: [UIFont boldSystemFontOfSize:17.0]];
     [importLabel sizeToFit];
@@ -77,7 +77,7 @@ NSMutableDictionary * segConToVar;
                 discriminatoryAssist.backgroundColor = [UIColor colorWithRed:.7 green:.9 blue:.9 alpha:.3];
                 [_surveyView addSubview: discriminatoryAssist];
             }
-        UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(14, lastExpQ + (i * 30), 0, 30)];
+        UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, lastExpQ + (i * 30), 0, 30)];
         questionLabel.text = [[[importQuestions objectAtIndex:i] componentsSeparatedByString:@"\t"] objectAtIndex:0];
         [questionLabel setFont: [UIFont systemFontOfSize:14]];
         [questionLabel sizeToFit];
@@ -98,7 +98,7 @@ NSMutableDictionary * segConToVar;
         [segConToVar setValue:controlForQuestion forKey:keyValue];
             questionNumber++;
         } else {
-            UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, lastExpQ + (i * 30)+5, 0, 30)];
+            UILabel *questionLabel = [[UILabel alloc] initWithFrame:CGRectMake(6, lastExpQ + (i * 30)+5, 0, 30)];
             questionLabel.text = [[[importQuestions objectAtIndex:i] componentsSeparatedByString:@"\t"] objectAtIndex:0];
             [questionLabel setFont: [UIFont boldSystemFontOfSize:15.5]];
             [questionLabel sizeToFit];
