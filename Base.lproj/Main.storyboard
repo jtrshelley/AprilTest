@@ -348,11 +348,6 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="whiteLarge" id="eW9-KF-nfO">
-                                <rect key="frame" x="493" y="366" width="37" height="37"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="color" red="0.19479927007299269" green="0.68521897810218979" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
@@ -363,7 +358,6 @@
                         <outlet property="dataWindow" destination="8p1-eo-fnN" id="hJO-jf-96m"/>
                         <outlet property="hoursAfterStorm" destination="Unz-s1-Xcp" id="RlX-50-qkl"/>
                         <outlet property="hoursAfterStormLabel" destination="hq7-1I-tcS" id="RQ4-f0-jjN"/>
-                        <outlet property="loadingIndicator" destination="eW9-KF-nfO" id="Ygx-eL-e00"/>
                         <outlet property="mapWindow" destination="11x-4W-pdx" id="0Kb-No-lce"/>
                         <outlet property="thresholdValue" destination="wo8-Ol-8vA" id="Hc8-FS-IMZ"/>
                         <outlet property="thresholdValueLabel" destination="qRd-5F-t0R" id="n7N-t7-L7c"/>

@@ -73,6 +73,11 @@ int trialNum = 0;
     [valueLabel sizeToFit ];
     valueLabel.textColor = [UIColor blackColor];
     [self.view addSubview:valueLabel];
+    
+    _loadingIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    _loadingIndicator.center = CGPointMake(512, 300);
+    _loadingIndicator.color = [UIColor blueColor];
+    [self.view addSubview:_loadingIndicator];
 //    [self loadNextSimulationRun];
 //    [self drawTitles];
 //    lastKnownConcernProfile= [[NSMutableArray alloc] initWithObjects:@"", nil];
@@ -111,15 +116,14 @@ int trialNum = 0;
     // Dispose of any resources that can be recreated.
 }
 - (IBAction)pullNextRun:(id)sender {
-    [_loadingIndicator setHidden:FALSE];
-    [_loadingIndicator startAnimating];
+    [_loadingIndicator performSelectorInBackground:@selector(startAnimating) withObject:nil];
     [self loadNextSimulationRun];
-    [_loadingIndicator stopAnimating];
 }
 
 - (void)loadNextSimulationRun{
 
-    _url = @"http://192.168.1.42";
+    //_url = @"http://192.168.1.42";
+    _url = @"http://127.0.0.1";
     _studyNum = 1;
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", _url, @"simOutput.php"];
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
@@ -166,12 +170,13 @@ int trialNum = 0;
         [self drawTrial: trialNum];
         trialNum++;
     }
+    NSLog(@"%d, %d", _loadingIndicator.isAnimating, _loadingIndicator.isHidden);
     [_loadingIndicator stopAnimating];
     
 }
 
 -(void) drawTrial: (int) trial{
-    NSLog (@"Drawing trial number: %d", trial);
+    //NSLog (@"Drawing trial number: %d", trial);
     AprilTestSimRun *simRun = [trialRuns objectAtIndex:trial];
     AprilTestNormalizedVariable *simRunNormal = [trialRunsNormalized objectAtIndex:trial];
     FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial) +5, 125, 145))];
@@ -194,7 +199,7 @@ int trialNum = 0;
         priorityTotal += [(AprilTestVariable *)[_currentConcernRanking objectAtIndex:i] currentConcernRanking];
     }
     
-    int width = 0;
+    int width = 170;
     
     NSArray *sortedArray = [_currentConcernRanking sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
         NSInteger first = [(AprilTestVariable*)a currentConcernRanking];
@@ -202,7 +207,8 @@ int trialNum = 0;
         if(first > second) return NSOrderedAscending;
         else return NSOrderedDescending;
     }];
-    int visibleIndex = 1;
+    NSMutableArray *scoreVisVals = [[NSMutableArray alloc] init];
+    int visibleIndex = 0;
     for(int i = 0 ; i <_currentConcernRanking.count ; i++){
         
         AprilTestVariable * currentVar =[sortedArray objectAtIndex:i];
@@ -219,6 +225,9 @@ int trialNum = 0;
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicInstallCost);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicMaintenanceCost);
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicInstallCost)]];
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicMaintenanceCost)]];
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicDamages)]];
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%d", simRun.privateInstallCost] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175)] ;
             [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%d", simRun.privateDamages] withConcernPosition:width + 25 andyValue: (simRun.trialNum*175) +30];
@@ -226,15 +235,21 @@ int trialNum = 0;
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateInstallCost);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateMaintenanceCost);
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateInstallCost)]];
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages)]];
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateMaintenanceCost)]];
         } else if ([currentVar.name compare: @"impactingMyNeighbors"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.impactNeighbors] withConcernPosition:width +50 andyValue: (simRun.trialNum ) * 175];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * (simRunNormal.impactNeighbors);
+            [scoreVisVals addObject:[NSNumber numberWithFloat: currentVar.currentConcernRanking/priorityTotal * (simRunNormal.impactNeighbors)]];
         } else if ([currentVar.name compare: @"neighborImpactingMe"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.neighborsImpactMe] withConcernPosition:width + 50 andyValue: (simRun.trialNum )* 175];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * ( simRunNormal.neighborsImpactMe);
+            [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal * ( simRunNormal.neighborsImpactMe)]];
         } else if ([currentVar.name compare: @"groundwaterInfiltration"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.infiltration] withConcernPosition:width + 50 andyValue: (simRun.trialNum)* 175 ];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * (1 - simRunNormal.infiltration);
+            [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal * (1 - simRunNormal.infiltration)]];
         } else if([currentVar.name compare:@"puddleTime"] == NSOrderedSame){
             FebTestWaterDisplay * wd;
             //NSLog(@"%d, %d", waterDisplays.count, i);
@@ -265,15 +280,33 @@ int trialNum = 0;
                 ev.frame = CGRectMake(width, (simRun.trialNum )*175 + 15, 130, 150);
             }
             scoreTotal += currentVar.currentConcernRanking/priorityTotal *  simRunNormal.efficiency;
+                    [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal *  simRunNormal.efficiency]];
             //NSLog(@"%@", NSStringFromCGRect(ev.frame));
             
             
             [ev updateViewForHour: _hoursAfterStorm.value];
             
         }
+
         width+= currentVar.widthOfVisualization;
         if (currentVar.widthOfVisualization > 0) visibleIndex++;
     }
+    UILabel *fullValue = [[UILabel alloc] initWithFrame:CGRectMake(10, (simRun.trialNum)*175 + 50,  150, 20)];
+    fullValue.backgroundColor = [UIColor lightGrayColor];
+  
+    [_dataWindow addSubview:fullValue];
+
+    float maxX = 10;
+    float totalScore = 0;
+    for(int i =  scoreVisVals.count - 1; i >= 0; i--){
+        float scoreWidth = [[scoreVisVals objectAtIndex: i] floatValue] * 150;
+        totalScore += scoreWidth;
+          UILabel * componentScore = [[UILabel alloc] initWithFrame:CGRectMake(maxX, (simRun.trialNum)*175 + 50, floor(scoreWidth), 20)];
+        [componentScore setBackgroundColor:[UIColor colorWithHue: i/10 saturation:0.6 brightness:0.6 alpha:1.0]];
+            [_dataWindow addSubview:componentScore];
+        maxX+=floor(scoreWidth);
+    }
+
     
     [_dataWindow setContentSize:CGSizeMake(width+=100, (simRun.trialNum+1)*200)];
     for(UILabel * bgCol in bgCols){
@@ -316,7 +349,17 @@ int trialNum = 0;
         if(first > second) return NSOrderedAscending;
         else return NSOrderedDescending;
     }];
-    int visibleIndex = 1;
+
+    UILabel * scoreLabel = [[UILabel alloc] init];
+    scoreLabel.frame = CGRectMake(width, 2, 170, 40);
+    scoreLabel.font = [UIFont boldSystemFontOfSize:16.0];
+    scoreLabel.text = @"  Score Breakdown";
+    [_titleWindow addSubview:scoreLabel];
+    width+=170;
+    
+    
+    
+    int visibleIndex = 0;
     for(int i = 0 ; i <_currentConcernRanking.count ; i++){
 
         AprilTestVariable * currentVar =[sortedArray objectAtIndex:i];
@@ -329,11 +372,11 @@ int trialNum = 0;
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
             currentVarLabel.text =@"  Private Cost";
         } else if ([currentVar.name compare: @"impactingMyNeighbors"] == NSOrderedSame){
-            currentVarLabel.text =@"  Runoff to Neighbors";
+            currentVarLabel.text =@"  Rainwater to Neighbors";
         } else if ([currentVar.name compare: @"neighborImpactingMe"] == NSOrderedSame){
-            currentVarLabel.text=@"  Neighbors Runoff to Me";
+            currentVarLabel.text=@"  Rainwater from Neighbors";
         } else if ([currentVar.name compare: @"efficiencyOfIntervention"] == NSOrderedSame){
-            currentVarLabel.text =@"  Intervention Capacity";
+            currentVarLabel.text =@"  Intervention Efficiency";
         } else if ([currentVar.name compare:@"puddleTime"] == NSOrderedSame){
             currentVarLabel.text = @"  Puddle Depth Over Time";
         } else if( [currentVar.name compare:@"groundwaterInfiltration"] == NSOrderedSame){
@@ -367,9 +410,7 @@ int trialNum = 0;
     }
 }
 - (IBAction)sliderChanged:(id)sender {
-    [_loadingIndicator setHidden:FALSE];
-    NSLog(@"%@, %hhd", _loadingIndicator, _loadingIndicator.hidden );
-    [_loadingIndicator startAnimating];
+    [_loadingIndicator performSelectorInBackground:@selector(startAnimating) withObject:nil];
     float threshVal = _thresholdValue.value * 0.0393701;
     [_thresholdValue setEnabled:FALSE];
     [_hoursAfterStorm setEnabled:FALSE];
@@ -402,7 +443,6 @@ int trialNum = 0;
     [_dataWindow setScrollEnabled:TRUE];
     [_titleWindow setScrollEnabled:TRUE];
     [_loadingIndicator stopAnimating];
-    NSLog(@"%@, %hhd", _loadingIndicator, _loadingIndicator.hidden );
 }
 
 

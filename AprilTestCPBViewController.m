@@ -106,7 +106,8 @@ NSString * url;
     [labels removeAllObjects];
     [variablesOfInterest removeAllObjects];
     [checkboxes removeAllObjects];
-    url=@"http://192.168.1.42";
+    url = @"http://127.0.0.1";
+    //url=@"http://192.168.1.42";
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", url, @"test2.php"];
     
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"qNum=%d", qNum ];
