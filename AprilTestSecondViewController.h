@@ -20,5 +20,6 @@
 @property (strong, nonatomic) IBOutlet UILabel *hoursAfterStormLabel;
 @property (strong, nonatomic) IBOutlet UISlider *thresholdValue;
 @property (strong, nonatomic) IBOutlet UILabel *thresholdValueLabel;
+@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
 
 @end

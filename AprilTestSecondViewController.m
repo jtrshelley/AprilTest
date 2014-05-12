@@ -29,6 +29,7 @@
 @synthesize hoursAfterStorm = _hoursAfterStorm;
 @synthesize thresholdValueLabel = _thresholdValueLabel;
 @synthesize hoursAfterStormLabel = _hoursAfterStormLabel;
+@synthesize loadingIndicator = _loadingIndicator;
 
 NSMutableArray * trialRuns;
 NSMutableArray * trialRunsNormalized;
@@ -36,6 +37,7 @@ NSMutableArray * waterDisplays;
 NSMutableArray * efficiency;
 NSMutableArray *lastKnownConcernProfile;
 NSMutableArray *bgCols;
+UILabel *redThreshold;
 int trialNum = 0;
 
 @synthesize currentConcernRanking = _currentConcernRanking;
@@ -55,7 +57,15 @@ int trialNum = 0;
     _dataWindow.delegate = self;
     _titleWindow.delegate = self;
     bgCols = [[NSMutableArray alloc] init];
-    
+    float translateThreshValue = _thresholdValue.value/_thresholdValue.maximumValue * _thresholdValue.frame.size.width;
+    redThreshold = [[UILabel alloc] initWithFrame: CGRectMake(_thresholdValue.frame.origin.x + translateThreshValue + 2, _thresholdValue.frame.origin.y + _thresholdValue.frame.size.height/2, _thresholdValue.frame.size.width - 4 - translateThreshValue , _thresholdValue.frame.size.height/2)];
+    [redThreshold setBackgroundColor:[UIColor redColor]];
+    [self.view addSubview:redThreshold];
+    [self.view sendSubviewToBack:redThreshold];
+    UIImageView *gradient = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"gradientScale.png"]];
+    [gradient setFrame: CGRectMake(_thresholdValue.frame.origin.x + 2, _thresholdValue.frame.origin.y + _thresholdValue.frame.size.height/2, _thresholdValue.frame.size.width - 4, _thresholdValue.frame.size.height/2)];
+    [self.view addSubview: gradient];
+    [self.view sendSubviewToBack:gradient];
     UILabel *valueLabel = [[UILabel alloc] init];
     valueLabel.text = @"Map and Score";
     valueLabel.frame =CGRectMake(20, 55, 0, 0);
@@ -101,11 +111,15 @@ int trialNum = 0;
     // Dispose of any resources that can be recreated.
 }
 - (IBAction)pullNextRun:(id)sender {
+    [_loadingIndicator setHidden:FALSE];
+    [_loadingIndicator startAnimating];
     [self loadNextSimulationRun];
+    [_loadingIndicator stopAnimating];
 }
 
 - (void)loadNextSimulationRun{
-    _url = @"http://127.0.0.1";
+
+    _url = @"http://192.168.1.42";
     _studyNum = 1;
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", _url, @"simOutput.php"];
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
@@ -152,16 +166,18 @@ int trialNum = 0;
         [self drawTrial: trialNum];
         trialNum++;
     }
+    [_loadingIndicator stopAnimating];
+    
 }
 
 -(void) drawTrial: (int) trial{
     NSLog (@"Drawing trial number: %d", trial);
     AprilTestSimRun *simRun = [trialRuns objectAtIndex:trial];
     AprilTestNormalizedVariable *simRunNormal = [trialRunsNormalized objectAtIndex:trial];
-    FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial), 125, 145))];
+    FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial) +5, 125, 145))];
     interventionView.view = _mapWindow;
     [interventionView updateView];
-    UILabel *trialLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-30, 0, 0)];
+    UILabel *trialLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-27, 0, 0)];
     trialLabel.text = [NSString stringWithFormat:  @"Trial %d", trial + 1];
     trialLabel.font = [UIFont systemFontOfSize:14.0];
     [trialLabel sizeToFit];
@@ -268,7 +284,7 @@ int trialNum = 0;
         }
     }
     
-    UILabel *scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, 175*(trial+1) - 30, 0, 0)];
+    UILabel *scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, 175*(trial+1) - 27, 0, 0)];
     scoreLabel.text = [NSString stringWithFormat:  @"Score %.2f", scoreTotal];
     scoreLabel.font = [UIFont systemFontOfSize:14.0];
     [scoreLabel sizeToFit];
@@ -351,13 +367,18 @@ int trialNum = 0;
     }
 }
 - (IBAction)sliderChanged:(id)sender {
+    [_loadingIndicator setHidden:FALSE];
+    NSLog(@"%@, %hhd", _loadingIndicator, _loadingIndicator.hidden );
+    [_loadingIndicator startAnimating];
     float threshVal = _thresholdValue.value * 0.0393701;
     [_thresholdValue setEnabled:FALSE];
     [_hoursAfterStorm setEnabled:FALSE];
     [_mapWindow setScrollEnabled:FALSE];
     [_dataWindow setScrollEnabled:FALSE];
     [_titleWindow setScrollEnabled:FALSE];
-    _thresholdValueLabel.text = [NSString stringWithFormat:@"%.2F\"", threshVal ];
+    _thresholdValueLabel.text = [NSString stringWithFormat:@"%.1F\"", threshVal ];
+    float translateThreshValue = _thresholdValue.value/_thresholdValue.maximumValue * _thresholdValue.frame.size.width;
+    [redThreshold setFrame: CGRectMake(_thresholdValue.frame.origin.x + translateThreshValue + 2, _thresholdValue.frame.origin.y + _thresholdValue.frame.size.height/2, _thresholdValue.frame.size.width - 4 - translateThreshValue , _thresholdValue.frame.size.height/2)];
     [_thresholdValueLabel sizeToFit];
     for(int i = 0; i < waterDisplays.count; i++){
         FebTestWaterDisplay * temp = (FebTestWaterDisplay *) [waterDisplays objectAtIndex:i];
@@ -380,6 +401,8 @@ int trialNum = 0;
     [_mapWindow setScrollEnabled:TRUE];
     [_dataWindow setScrollEnabled:TRUE];
     [_titleWindow setScrollEnabled:TRUE];
+    [_loadingIndicator stopAnimating];
+    NSLog(@"%@, %hhd", _loadingIndicator, _loadingIndicator.hidden );
 }
 
 
