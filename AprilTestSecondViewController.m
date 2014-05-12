@@ -111,8 +111,7 @@ int trialNum = 0;
     // Dispose of any resources that can be recreated.
 }
 - (IBAction)pullNextRun:(id)sender {
-    [_loadingIndicator setHidden:FALSE];
-    [_loadingIndicator startAnimating];
+    [_loadingIndicator performSelectorInBackground:@selector(startAnimating) withObject:nil];
     [self loadNextSimulationRun];
     [_loadingIndicator stopAnimating];
 }
@@ -166,7 +165,6 @@ int trialNum = 0;
         [self drawTrial: trialNum];
         trialNum++;
     }
-    [_loadingIndicator stopAnimating];
     
 }
 
@@ -367,9 +365,7 @@ int trialNum = 0;
     }
 }
 - (IBAction)sliderChanged:(id)sender {
-    [_loadingIndicator setHidden:FALSE];
-    NSLog(@"%@, %hhd", _loadingIndicator, _loadingIndicator.hidden );
-    [_loadingIndicator startAnimating];
+    [_loadingIndicator performSelectorInBackground:@selector(startAnimating) withObject:nil];
     float threshVal = _thresholdValue.value * 0.0393701;
     [_thresholdValue setEnabled:FALSE];
     [_hoursAfterStorm setEnabled:FALSE];
@@ -402,7 +398,6 @@ int trialNum = 0;
     [_dataWindow setScrollEnabled:TRUE];
     [_titleWindow setScrollEnabled:TRUE];
     [_loadingIndicator stopAnimating];
-    NSLog(@"%@, %hhd", _loadingIndicator, _loadingIndicator.hidden );
 }
 
 
