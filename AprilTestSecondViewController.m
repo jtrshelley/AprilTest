@@ -170,7 +170,6 @@ int trialNum = 0;
         [self drawTrial: trialNum];
         trialNum++;
     }
-    NSLog(@"%d, %d", _loadingIndicator.isAnimating, _loadingIndicator.isHidden);
     [_loadingIndicator stopAnimating];
     
 }
@@ -295,14 +294,17 @@ int trialNum = 0;
     fullValue.backgroundColor = [UIColor lightGrayColor];
   
     [_dataWindow addSubview:fullValue];
-
+    NSLog(@" %@", scoreVisVals);
     float maxX = 10;
     float totalScore = 0;
     for(int i =  scoreVisVals.count - 1; i >= 0; i--){
         float scoreWidth = [[scoreVisVals objectAtIndex: i] floatValue] * 150;
         totalScore += scoreWidth;
           UILabel * componentScore = [[UILabel alloc] initWithFrame:CGRectMake(maxX, (simRun.trialNum)*175 + 50, floor(scoreWidth), 20)];
-        [componentScore setBackgroundColor:[UIColor colorWithHue: i/10 saturation:0.6 brightness:0.6 alpha:1.0]];
+        if (i % 2 == 0){
+        [componentScore setBackgroundColor:[UIColor colorWithHue: 1.0/(0.5*i + 0.1) saturation:0.6 brightness:0.6 alpha:1.0]];
+        }
+        [componentScore setBackgroundColor:[UIColor colorWithHue: 1.0/(0.25*i - 0.1) saturation:0.6 brightness:0.6 alpha:1.0]];
             [_dataWindow addSubview:componentScore];
         maxX+=floor(scoreWidth);
     }

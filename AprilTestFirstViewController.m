@@ -138,7 +138,7 @@ NSMutableDictionary * segConToVar;
      documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
      fileName = [documentsDirectory stringByAppendingPathComponent:@"surveySave.txt"];
     
-    NSLog (@"%@", content);
+    //NSLog (@"%@", content);
     
     //delete file if it does exist -- then create it
     if([[NSFileManager defaultManager] fileExistsAtPath:fileName]){
@@ -181,13 +181,13 @@ NSMutableDictionary * segConToVar;
 }
 
 - (IBAction)loadAnswers:(id)sender {
-    NSLog(@"Button pressed");
+    //NSLog(@"Button pressed");
     NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     NSString *path = [documentsDirectory stringByAppendingPathComponent:@"surveySave.txt"];
 
-    NSLog(@"%@", path);
+    //NSLog(@"%@", path);
     NSString *experienceQuestions = [NSString stringWithContentsOfFile:path encoding: NSUTF8StringEncoding error:nil];
-    NSLog(@"%@", experienceQuestions);
+    //NSLog(@"%@", experienceQuestions);
     if (experienceQuestions.length > 0){
         
         NSArray * expQuestions = [experienceQuestions componentsSeparatedByString:@"\n"];
