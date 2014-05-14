@@ -299,7 +299,7 @@ int trialNum = 0;
     //NSLog(@" %@", scoreVisVals);
     float maxX = 10;
     float totalScore = 0;
-    for(int i =  scoreVisVals.count - 1; i >= 0; i--){
+    for(int i =  0; i < scoreVisVals.count; i++){
         float scoreWidth = [[scoreVisVals objectAtIndex: i] floatValue] * 150;
         totalScore += scoreWidth;
           UILabel * componentScore = [[UILabel alloc] initWithFrame:CGRectMake(maxX, (simRun.trialNum)*175 + 50, floor(scoreWidth), 20)];
