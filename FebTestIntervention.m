@@ -92,7 +92,7 @@ NSMutableArray *imageViews;
                 break;
                 
         }
-        uv.frame = CGRectMake(self.frame.origin.x + [[temp objectAtIndex:0] intValue] * 5, self.frame.origin.y + (140 - [[temp objectAtIndex:1] intValue] * 5), 5, 5);
+        uv.frame = CGRectMake(self.frame.origin.x + [[temp objectAtIndex:0] intValue] * 5, self.frame.origin.y + (120 - [[temp objectAtIndex:1] intValue] * 5), 5, 5);
         if(uv.image.CGImage != NULL){
             [imageViews addObject:uv];
             [_view addSubview: uv];

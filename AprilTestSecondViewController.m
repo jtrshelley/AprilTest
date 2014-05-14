@@ -124,7 +124,7 @@ int trialNum = 0;
 
     //_url = @"http://192.168.1.42";
     _url = @"http://127.0.0.1";
-    _studyNum = 1;
+    _studyNum = -5;
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", _url, @"simOutput.php"];
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
     NSData *myRequestData = [ NSData dataWithBytes: [ myRequestString UTF8String ] length: [ myRequestString length ] ];
@@ -178,10 +178,10 @@ int trialNum = 0;
     //NSLog (@"Drawing trial number: %d", trial);
     AprilTestSimRun *simRun = [trialRuns objectAtIndex:trial];
     AprilTestNormalizedVariable *simRunNormal = [trialRunsNormalized objectAtIndex:trial];
-    FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial) +5, 125, 145))];
+    FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial) +5, 115, 125))];
     interventionView.view = _mapWindow;
     [interventionView updateView];
-    UILabel *trialLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-27, 0, 0)];
+    UILabel *trialLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-47, 0, 0)];
     trialLabel.text = [NSString stringWithFormat:  @"Trial %d", trial + 1];
     trialLabel.font = [UIFont systemFontOfSize:14.0];
     [trialLabel sizeToFit];
@@ -199,6 +199,8 @@ int trialNum = 0;
     }
     
     int width = 170;
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setNumberStyle:NSNumberFormatterDecimalStyle];
     
     NSArray *sortedArray = [_currentConcernRanking sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
         NSInteger first = [(AprilTestVariable*)a currentConcernRanking];
@@ -218,9 +220,9 @@ int trialNum = 0;
             [bgCols addObject:bgCol];
         }
         if([currentVar.name compare: @"publicCost"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%d", simRun.publicInstallCost]    withConcernPosition:width+25 andyValue: (simRun.trialNum) * 175 ];
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%d", simRun.publicDamages] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175) +30];
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%d", simRun.publicMaintenanceCost] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +60];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.publicInstallCost] ]]   withConcernPosition:width+25 andyValue: (simRun.trialNum) * 175 ];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt: simRun.publicDamages]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175) +30];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.publicMaintenanceCost]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +60];
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicInstallCost);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicMaintenanceCost);
@@ -228,9 +230,9 @@ int trialNum = 0;
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicMaintenanceCost)]];
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicDamages)]];
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%d", simRun.privateInstallCost] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175)] ;
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%d", simRun.privateDamages] withConcernPosition:width + 25 andyValue: (simRun.trialNum*175) +30];
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%d", simRun.privateMaintenanceCost] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +60];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateInstallCost]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175)] ;
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateDamages]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum*175) +30];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateMaintenanceCost]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +60];
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateInstallCost);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateMaintenanceCost);
@@ -254,13 +256,13 @@ int trialNum = 0;
             //NSLog(@"%d, %d", waterDisplays.count, i);
             if(waterDisplays.count <= trial){
                 //NSLog(@"Drawing water display for first time");
-                wd = [[FebTestWaterDisplay alloc] initWithFrame:CGRectMake(width + 10, (simRun.trialNum)*175, 125, 145) andContent:simRun.standingWater];
+                wd = [[FebTestWaterDisplay alloc] initWithFrame:CGRectMake(width + 10, (simRun.trialNum)*175 + 5, 115, 125) andContent:simRun.standingWater];
                 wd.view = _dataWindow;
                 [waterDisplays addObject:wd];
             } else {
                 //NSLog(@"Repositioning water display");
                 wd = [waterDisplays objectAtIndex:trial];
-                wd.frame = CGRectMake(width + 10, (simRun.trialNum)*175, 125, 145);
+                wd.frame = CGRectMake(width + 10, (simRun.trialNum)*175 + 5, 115, 125);
             }
             wd.thresholdValue = _thresholdValue.value;
             [wd updateView: _hoursAfterStorm.value];
@@ -294,7 +296,7 @@ int trialNum = 0;
     fullValue.backgroundColor = [UIColor lightGrayColor];
   
     [_dataWindow addSubview:fullValue];
-    NSLog(@" %@", scoreVisVals);
+    //NSLog(@" %@", scoreVisVals);
     float maxX = 10;
     float totalScore = 0;
     for(int i =  scoreVisVals.count - 1; i >= 0; i--){
@@ -319,7 +321,7 @@ int trialNum = 0;
         }
     }
     
-    UILabel *scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, 175*(trial+1) - 27, 0, 0)];
+    UILabel *scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, 175*(trial+1) - 47, 0, 0)];
     scoreLabel.text = [NSString stringWithFormat:  @"Score %.2f", scoreTotal];
     scoreLabel.font = [UIFont systemFontOfSize:14.0];
     [scoreLabel sizeToFit];

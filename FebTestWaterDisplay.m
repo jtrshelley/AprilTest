@@ -51,12 +51,13 @@
     bg.backgroundColor = [UIColor grayColor];
     [_blocks addObject:bg];
     [_view addSubview:bg];
+
     for(int i = 0; i < _waterHeights.count; i++){
         NSArray *temp = [_waterHeights objectAtIndex:i];
         if( temp.count < 4) break;
         if ( [[temp objectAtIndex:0] floatValue] == hoursAfterStormCatch || i == _waterHeights.count){
             //NSLog(@"hours: %f, hours after storm on bar: %f", [[temp objectAtIndex:0] floatValue], hoursAfterStormCatch );
-            UILabel *ux = [[UILabel alloc] initWithFrame: CGRectMake(self.frame.origin.x + [[temp objectAtIndex:1] intValue]*5, self.frame.origin.y +(140-[[temp objectAtIndex:2] intValue]*5), 5, 5)];
+            UILabel *ux = [[UILabel alloc] initWithFrame: CGRectMake(self.frame.origin.x + [[temp objectAtIndex:1] intValue]*5, self.frame.origin.y +(120-[[temp objectAtIndex:2] intValue]*5), 5, 5)];
             float waterHeight = [[temp objectAtIndex:3] floatValue];
             if( [[temp objectAtIndex:1] intValue] % 8 == 0 || [[temp objectAtIndex:2] intValue] % 14 == 0){
                 waterHeight = waterHeight - 127;
