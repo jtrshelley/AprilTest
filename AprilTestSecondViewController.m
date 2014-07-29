@@ -124,8 +124,9 @@ bool passFirstThree = FALSE;
 - (void)loadNextSimulationRun{
 
     //_url = @"http://192.168.1.42";
-    _url = @"http://127.0.0.1";
-    _studyNum = 7;
+    //_url = @"http://127.0.0.1";
+    _url= @"http://131.193.79.217";
+    _studyNum = 6;
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", _url, @"simOutput.php"];
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
     NSData *myRequestData = [ NSData dataWithBytes: [ myRequestString UTF8String ] length: [ myRequestString length ] ];
@@ -142,7 +143,7 @@ bool passFirstThree = FALSE;
         //NSLog(@"error: %@", err);
         
         if( [returnData bytes]) content = [NSString stringWithUTF8String:[returnData bytes]];
-        // NSLog(@"responseData: %@", content);
+        NSLog(@"responseData: %@", content);
     }
     NSString *urlPlusFileN = [NSString stringWithFormat:@"%@/%@", _url, @"simOutputN.php"];
     NSString *myRequestStringN = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
@@ -160,10 +161,10 @@ bool passFirstThree = FALSE;
         //NSLog(@"error: %@", err);
         
         if( [returnDataN bytes]) contentN = [NSString stringWithUTF8String:[returnDataN bytes]];
-       //NSLog(@"responseData: %@", contentN);
+       NSLog(@"responseData: %@", contentN);
     }
     
-    if(content != NULL && content.length > 200 && contentN != NULL && contentN.length > 200){
+    if(content != NULL && content.length > 100 && contentN != NULL){
         AprilTestSimRun *simRun = [[AprilTestSimRun alloc] init:content withTrialNum:trialNum];
         AprilTestNormalizedVariable *simRunNormal = [[AprilTestNormalizedVariable alloc] init: contentN withTrialNum:trialNum];
         [trialRunsNormalized addObject:simRunNormal];
