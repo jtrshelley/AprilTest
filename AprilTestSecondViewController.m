@@ -38,7 +38,9 @@ NSMutableArray * efficiency;
 NSMutableArray *lastKnownConcernProfile;
 NSMutableArray *bgCols;
 UILabel *redThreshold;
+NSArray *arrStatus;
 int trialNum = 0;
+bool passFirstThree = FALSE;
 
 @synthesize currentConcernRanking = _currentConcernRanking;
 
@@ -78,10 +80,9 @@ int trialNum = 0;
     _loadingIndicator.center = CGPointMake(512, 300);
     _loadingIndicator.color = [UIColor blueColor];
     [self.view addSubview:_loadingIndicator];
-//    [self loadNextSimulationRun];
-//    [self drawTitles];
-//    lastKnownConcernProfile= [[NSMutableArray alloc] initWithObjects:@"", nil];
-//    
+
+     arrStatus = [[NSArray alloc] initWithObjects:@"Trial Number", @"Best Score", @"Public Cost", @"Private Cost", @"Rainwater to Neighbors", @"Rainwater from Neighbors", @"Intervention Efficiency", @"% Rainwater Infiltrated", nil];
+    
 }
 
 - (void) viewWillAppear:(BOOL)animated{
@@ -124,7 +125,7 @@ int trialNum = 0;
 
     //_url = @"http://192.168.1.42";
     _url = @"http://127.0.0.1";
-    _studyNum = -5;
+    _studyNum = 7;
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", _url, @"simOutput.php"];
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
     NSData *myRequestData = [ NSData dataWithBytes: [ myRequestString UTF8String ] length: [ myRequestString length ] ];
@@ -141,7 +142,7 @@ int trialNum = 0;
         //NSLog(@"error: %@", err);
         
         if( [returnData bytes]) content = [NSString stringWithUTF8String:[returnData bytes]];
-         //NSLog(@"responseData: %@", content);
+        // NSLog(@"responseData: %@", content);
     }
     NSString *urlPlusFileN = [NSString stringWithFormat:@"%@/%@", _url, @"simOutputN.php"];
     NSString *myRequestStringN = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
@@ -150,7 +151,7 @@ int trialNum = 0;
     [ requestN setHTTPMethod: @"POST" ];
     [ requestN setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"content-type"];
     [ requestN setHTTPBody: myRequestDataN ];
-    //NSLog(@"%@", request);
+    NSLog(@"%@", request);
     NSString *contentN;
     while( !contentN){
         NSURLResponse *responseN;
@@ -159,10 +160,10 @@ int trialNum = 0;
         //NSLog(@"error: %@", err);
         
         if( [returnDataN bytes]) contentN = [NSString stringWithUTF8String:[returnDataN bytes]];
-       // NSLog(@"responseData: %@", contentN);
+       //NSLog(@"responseData: %@", contentN);
     }
     
-    if(content != NULL && content.length > 100){
+    if(content != NULL && content.length > 200 && contentN != NULL && contentN.length > 200){
         AprilTestSimRun *simRun = [[AprilTestSimRun alloc] init:content withTrialNum:trialNum];
         AprilTestNormalizedVariable *simRunNormal = [[AprilTestNormalizedVariable alloc] init: contentN withTrialNum:trialNum];
         [trialRunsNormalized addObject:simRunNormal];
@@ -400,6 +401,7 @@ int trialNum = 0;
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    
     if([scrollView isEqual:_dataWindow]) {
         CGPoint offset = _mapWindow.contentOffset;
         offset.y = _dataWindow.contentOffset.y;
@@ -412,8 +414,44 @@ int trialNum = 0;
         offset.y = _mapWindow.contentOffset.y;
         [_dataWindow setContentOffset:offset];
     }
+    //NSLog(@"content offset: %f",  _dataWindow.contentOffset.x);
+    if(!passFirstThree && _dataWindow.contentOffset.x > 50){
+        NSMutableString * content = [[NSMutableString alloc] initWithString:@"Scrolled past three most important variables"];
+        
+        [content appendString:@"\n\n"];
+        NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+        NSString *fileName = [documentsDirectory stringByAppendingPathComponent:@"logfile_simResults.txt"];
+        
+        //create file if it doesn't exist
+        if(![[NSFileManager defaultManager] fileExistsAtPath:fileName])
+            [[NSFileManager defaultManager] createFileAtPath:fileName contents:nil attributes:nil];
+        
+        NSFileHandle *file = [NSFileHandle fileHandleForUpdatingAtPath:fileName];
+        [file seekToEndOfFile];
+        [file writeData:[content dataUsingEncoding:NSUTF8StringEncoding]];
+        [file closeFile];
+        passFirstThree = TRUE;
+    }
+    if(passFirstThree &&  _dataWindow.contentOffset.x <= 50 ){
+        NSMutableString * content = [[NSMutableString alloc] initWithString:@"Returned to three most important variables"];
+        
+        [content appendString:@"\n\n"];
+        NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+        NSString *fileName = [documentsDirectory stringByAppendingPathComponent:@"logfile_simResults.txt"];
+        
+        //create file if it doesn't exist
+        if(![[NSFileManager defaultManager] fileExistsAtPath:fileName])
+            [[NSFileManager defaultManager] createFileAtPath:fileName contents:nil attributes:nil];
+        
+        NSFileHandle *file = [NSFileHandle fileHandleForUpdatingAtPath:fileName];
+        [file seekToEndOfFile];
+        [file writeData:[content dataUsingEncoding:NSUTF8StringEncoding]];
+        [file closeFile];
+        passFirstThree = FALSE;
+    }
 }
 - (IBAction)sliderChanged:(id)sender {
+    NSMutableString * content = [NSMutableString alloc];
     [_loadingIndicator performSelectorInBackground:@selector(startAnimating) withObject:nil];
     float threshVal = _thresholdValue.value * 0.0393701;
     [_thresholdValue setEnabled:FALSE];
@@ -447,7 +485,73 @@ int trialNum = 0;
     [_dataWindow setScrollEnabled:TRUE];
     [_titleWindow setScrollEnabled:TRUE];
     [_loadingIndicator stopAnimating];
+    if(sender == _thresholdValue){
+        content = [content initWithFormat:@"Threshold value set to:%f", threshVal];
+    } else {
+        content = [content initWithFormat:@"Hours after storm set to: %d", hoursAfterStorm];
+    }
+    
+        
+        [content appendString:@"\n\n"];
+        NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+        NSString *fileName = [documentsDirectory stringByAppendingPathComponent:@"logfile_simResults.txt"];
+        
+        //create file if it doesn't exist
+        if(![[NSFileManager defaultManager] fileExistsAtPath:fileName])
+            [[NSFileManager defaultManager] createFileAtPath:fileName contents:nil attributes:nil];
+        
+        NSFileHandle *file = [NSFileHandle fileHandleForUpdatingAtPath:fileName];
+        [file seekToEndOfFile];
+        [file writeData:[content dataUsingEncoding:NSUTF8StringEncoding]];;
 }
 
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow: (NSInteger)row inComponent:(NSInteger)component {
+    // Handle the selection
+}
+
+// tell the picker how many rows are available for a given component
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+    NSUInteger numRows = [arrStatus count];
+    
+    return numRows;
+}
+
+// tell the picker how many components it will have
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+    return 1;
+}
+
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view{
+    UILabel* tView = (UILabel*)view;
+    if (!tView){
+        tView = [[UILabel alloc] init];
+        // Setup label properties - frame, font, colors etc
+        tView.frame = CGRectMake(0, 0, 250, 30);
+        tView.font = [UIFont boldSystemFontOfSize:15.0];
+
+    }
+    tView.text = [arrStatus objectAtIndex:row];
+    // Fill the label text here
+
+    return tView;
+}
+
+// tell the picker the title for a given component
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
+
+    return [arrStatus objectAtIndex:row];
+}
+
+// tell the picker the width of each row for a given component
+- (CGFloat)pickerView:(UIPickerView *)pickerView widthForComponent:(NSInteger)component {
+    int sectionWidth = 250;
+    
+    return sectionWidth;
+}
+
+-(CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component{
+    int rowHeight = 20;
+    return rowHeight;
+}
 
 @end
