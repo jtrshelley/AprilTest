@@ -21,6 +21,7 @@
 @synthesize neighborsImpactMe = _neighborsImpactMe;
 @synthesize infiltration = _infiltration;
 @synthesize efficiency = _efficiency;
+@synthesize maxWaterHeights = _maxWaterHeights;
 
 
 -(id) init: (NSString *) pageResults withTrialNum:(int)trialNum {
@@ -39,6 +40,7 @@
     _neighborsImpactMe = [[[components objectAtIndex:9] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] floatValue];
     _infiltration = [[[components objectAtIndex:10] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] floatValue];
     _efficiency = [[components objectAtIndex:11] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    _maxWaterHeights = [[components objectAtIndex:12] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     _trialNum = trialNum;
     
     return self;

@@ -21,6 +21,7 @@
 @property float neighborsImpactMe;
 @property float infiltration;
 @property NSString * efficiency;
+@property NSString * maxWaterHeights;
 @property int trialNum;
 
 -(id) init: (NSString *) pageResults withTrialNum: (int) trialNum;

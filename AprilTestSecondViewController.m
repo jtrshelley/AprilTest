@@ -34,6 +34,7 @@
 NSMutableArray * trialRuns;
 NSMutableArray * trialRunsNormalized;
 NSMutableArray * waterDisplays;
+NSMutableArray * maxWaterDisplays;
 NSMutableArray * efficiency;
 NSMutableArray *lastKnownConcernProfile;
 NSMutableArray *bgCols;
@@ -54,6 +55,7 @@ bool passFirstThree = FALSE;
     trialRuns = [[NSMutableArray alloc] init];
     trialRunsNormalized = [[NSMutableArray alloc] init];
     waterDisplays = [[NSMutableArray alloc] init];
+    maxWaterDisplays = [[NSMutableArray alloc] init];
     efficiency = [[NSMutableArray alloc] init];
     _mapWindow.delegate = self;
     _dataWindow.delegate = self;
@@ -266,9 +268,20 @@ bool passFirstThree = FALSE;
                 wd = [waterDisplays objectAtIndex:trial];
                 wd.frame = CGRectMake(width + 10, (simRun.trialNum)*175 + 5, 115, 125);
             }
+            //display window for maxHeights
+            FebTestWaterDisplay * mwd;
+            if(maxWaterDisplays.count <= trial){
+                mwd  = [[FebTestWaterDisplay alloc] initWithFrame:CGRectMake(width + 145, (simRun.trialNum)*175 + 5, 115, 125) andContent:simRun.maxWaterHeights];
+                mwd.view = _dataWindow;
+                [maxWaterDisplays addObject:mwd];
+            } else {
+                mwd = [maxWaterDisplays objectAtIndex:trial];
+                mwd.frame = CGRectMake(width + 145, (simRun.trialNum)*175 + 5, 115, 125);
+            }
             wd.thresholdValue = _thresholdValue.value;
             [wd updateView: _hoursAfterStorm.value];
-            
+            mwd.thresholdValue = _thresholdValue.value;
+            [mwd updateView:48];
         } else if ([currentVar.name compare: @"efficiencyOfIntervention"] == NSOrderedSame){
             AprilTestEfficiencyView *ev;
             if( efficiency.count <= trial){
@@ -372,7 +385,7 @@ bool passFirstThree = FALSE;
         UILabel * currentVarLabel = [[UILabel alloc] init];
                 if (visibleIndex % 2 == 0) currentVarLabel.backgroundColor = [UIColor colorWithRed:.8 green:.9 blue:1.0 alpha:.5];
         currentVarLabel.frame = CGRectMake(width, 2, currentVar.widthOfVisualization - 10, 40);
-        currentVarLabel.font = [UIFont boldSystemFontOfSize:16.0];
+        currentVarLabel.font = [UIFont boldSystemFontOfSize:15.3];
         if([currentVar.name compare: @"publicCost"] == NSOrderedSame){
             currentVarLabel.text = @"  Public Cost";
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
@@ -384,7 +397,7 @@ bool passFirstThree = FALSE;
         } else if ([currentVar.name compare: @"efficiencyOfIntervention"] == NSOrderedSame){
             currentVarLabel.text =@"  Intervention Efficiency";
         } else if ([currentVar.name compare:@"puddleTime"] == NSOrderedSame){
-            currentVarLabel.text = @"  Puddle Depth Over Time";
+            currentVarLabel.text = @"  Puddle Depth Changes and Maximums";
         } else if( [currentVar.name compare:@"groundwaterInfiltration"] == NSOrderedSame){
             currentVarLabel.text = @"  % Rainwater Infiltrated";
         } else {
@@ -467,6 +480,8 @@ bool passFirstThree = FALSE;
     for(int i = 0; i < waterDisplays.count; i++){
         FebTestWaterDisplay * temp = (FebTestWaterDisplay *) [waterDisplays objectAtIndex:i];
         temp.thresholdValue = _thresholdValue.value;
+        FebTestWaterDisplay * tempHeights = (FebTestWaterDisplay *) [maxWaterDisplays objectAtIndex: i];
+        tempHeights.thresholdValue = _thresholdValue.value;
     }
     
     int hoursAfterStorm = floorf(_hoursAfterStorm.value);
@@ -477,8 +492,10 @@ bool passFirstThree = FALSE;
     for(int i = 0; i < waterDisplays.count; i++){
         FebTestWaterDisplay * temp = (FebTestWaterDisplay *) [waterDisplays objectAtIndex:i];
         AprilTestEfficiencyView * temp2 = (AprilTestEfficiencyView *)[efficiency objectAtIndex:i];
+        FebTestWaterDisplay * tempHeights = (FebTestWaterDisplay *) [maxWaterDisplays objectAtIndex: i];
         [temp2 updateViewForHour:hoursAfterStorm];
         [temp updateView:hoursAfterStorm];
+        [tempHeights updateView:48];
     }
     [_thresholdValue setEnabled:TRUE];
     [_hoursAfterStorm setEnabled:TRUE];
