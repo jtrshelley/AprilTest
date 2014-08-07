@@ -397,7 +397,7 @@ bool passFirstThree = FALSE;
         } else if ([currentVar.name compare: @"efficiencyOfIntervention"] == NSOrderedSame){
             currentVarLabel.text =@"  Intervention Efficiency";
         } else if ([currentVar.name compare:@"puddleTime"] == NSOrderedSame){
-            currentVarLabel.text = @"  Puddle Depth Changes and Maximums";
+            currentVarLabel.text = @"  Puddle Depth Viewer";
         } else if( [currentVar.name compare:@"groundwaterInfiltration"] == NSOrderedSame){
             currentVarLabel.text = @"  % Rainwater Infiltrated";
         } else {
