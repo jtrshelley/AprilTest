@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface AprilTestSecondViewController : UIViewController <UIScrollViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate>
+@interface AprilTestSecondViewController : UIViewController <UIScrollViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UITextFieldDelegate>
 @property NSMutableArray * currentConcernRanking;
 @property int studyNum;
 @property (strong, nonatomic) IBOutlet UIScrollView *dataWindow;

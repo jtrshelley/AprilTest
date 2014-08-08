@@ -38,8 +38,10 @@ NSMutableArray * maxWaterDisplays;
 NSMutableArray * efficiency;
 NSMutableArray *lastKnownConcernProfile;
 NSMutableArray *bgCols;
+NSMutableArray *scenarioNames;
 UILabel *redThreshold;
 NSArray *arrStatus;
+NSMutableDictionary *scoreColors;
 int trialNum = 0;
 bool passFirstThree = FALSE;
 
@@ -57,6 +59,7 @@ bool passFirstThree = FALSE;
     waterDisplays = [[NSMutableArray alloc] init];
     maxWaterDisplays = [[NSMutableArray alloc] init];
     efficiency = [[NSMutableArray alloc] init];
+    scenarioNames = [[NSMutableArray alloc] init];
     _mapWindow.delegate = self;
     _dataWindow.delegate = self;
     _titleWindow.delegate = self;
@@ -84,6 +87,9 @@ bool passFirstThree = FALSE;
     [self.view addSubview:_loadingIndicator];
 
      arrStatus = [[NSArray alloc] initWithObjects:@"Trial Number", @"Best Score", @"Public Cost", @"Private Cost", @"Rainwater to Neighbors", @"Rainwater from Neighbors", @"Intervention Efficiency", @"% Rainwater Infiltrated", nil];
+    
+    scoreColors = [[NSMutableDictionary alloc] initWithObjects:
+                   [[NSArray alloc] initWithObjects : [UIColor colorWithHue:.165 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.08 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.16 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.24 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.42 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.32 saturation:.3 brightness:9 alpha: 1.0], [UIColor colorWithHue:.4 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.48 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.56 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.64 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.72 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.8 saturation:.3 brightness:.9 alpha: 1.0], [UIColor colorWithHue:.88 saturation:.3 brightness:.9 alpha: 1.0], nil ]    forKeys: [[NSArray alloc] initWithObjects: @"publicCost", @"publicCostI", @"publicCostD", @"publicCostM", @"privateCost", @"privateCostI", @"privateCostD", @"privateCostM", @"impactingMyNeighbors", @"neighborImpactingMe", @"groundwaterInfiltration", @"puddleTime", @"efficiencyOfIntervention", nil] ];
     
 }
 
@@ -201,6 +207,25 @@ bool passFirstThree = FALSE;
         //NSLog(@"%@", [_currentConcernRanking objectAtIndex:i] );
         priorityTotal += [(AprilTestVariable *)[_currentConcernRanking objectAtIndex:i] currentConcernRanking];
     }
+    UITextField *tx;
+    if(trialNum >= scenarioNames.count){
+        tx = [[UITextField alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-27, 150, 30)];
+        tx.borderStyle = UITextBorderStyleRoundedRect;
+        tx.font = [UIFont systemFontOfSize:15];
+        tx.placeholder = @"enter text";
+        tx.autocorrectionType = UITextAutocorrectionTypeNo;
+        tx.keyboardType = UIKeyboardTypeDefault;
+        tx.returnKeyType = UIReturnKeyDone;
+        tx.clearButtonMode = UITextFieldViewModeWhileEditing;
+        tx.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+        tx.delegate = self;
+        tx.text = trialLabel.text;
+        [_mapWindow addSubview:tx];
+        [scenarioNames addObject:tx];
+    } else {
+        tx = [scenarioNames objectAtIndex:trialNum];
+        tx.frame = CGRectMake(20, 175*(trial+1)-27, 100, 30);
+    }
     
     int width = 170;
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
@@ -213,6 +238,7 @@ bool passFirstThree = FALSE;
         else return NSOrderedDescending;
     }];
     NSMutableArray *scoreVisVals = [[NSMutableArray alloc] init];
+    NSMutableArray *scoreVisNames = [[NSMutableArray alloc] init];
     int visibleIndex = 0;
     for(int i = 0 ; i <_currentConcernRanking.count ; i++){
         
@@ -233,6 +259,9 @@ bool passFirstThree = FALSE;
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicInstallCost)]];
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicMaintenanceCost)]];
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicDamages)]];
+            [scoreVisNames addObject: @"publicCostI"];
+            [scoreVisNames addObject: @"publicCostM"];
+            [scoreVisNames addObject: @"publicCostD"];
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateInstallCost]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175)] ;
             [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateDamages]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum*175) +30];
@@ -241,20 +270,26 @@ bool passFirstThree = FALSE;
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateMaintenanceCost);
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateInstallCost)]];
-            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages)]];
             [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateMaintenanceCost)]];
+            [scoreVisVals addObject:[NSNumber numberWithFloat:(currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages)]];
+            [scoreVisNames addObject: @"privateCostI"];
+            [scoreVisNames addObject: @"privateCostM"];
+            [scoreVisNames addObject: @"privateCostD"];
         } else if ([currentVar.name compare: @"impactingMyNeighbors"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.impactNeighbors] withConcernPosition:width +50 andyValue: (simRun.trialNum ) * 175];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * (simRunNormal.impactNeighbors);
             [scoreVisVals addObject:[NSNumber numberWithFloat: currentVar.currentConcernRanking/priorityTotal * (simRunNormal.impactNeighbors)]];
+            [scoreVisNames addObject: currentVar.name];
         } else if ([currentVar.name compare: @"neighborImpactingMe"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.neighborsImpactMe] withConcernPosition:width + 50 andyValue: (simRun.trialNum )* 175];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * ( simRunNormal.neighborsImpactMe);
             [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal * ( simRunNormal.neighborsImpactMe)]];
+            [scoreVisNames addObject: currentVar.name];
         } else if ([currentVar.name compare: @"groundwaterInfiltration"] == NSOrderedSame){
             [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.infiltration] withConcernPosition:width + 50 andyValue: (simRun.trialNum)* 175 ];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * (1 - simRunNormal.infiltration);
             [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal * (1 - simRunNormal.infiltration)]];
+            [scoreVisNames addObject: currentVar.name];
         } else if([currentVar.name compare:@"puddleTime"] == NSOrderedSame){
             FebTestWaterDisplay * wd;
             //NSLog(@"%d, %d", waterDisplays.count, i);
@@ -298,7 +333,7 @@ bool passFirstThree = FALSE;
             scoreTotal += currentVar.currentConcernRanking/priorityTotal *  simRunNormal.efficiency;
                     [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal *  simRunNormal.efficiency]];
             //NSLog(@"%@", NSStringFromCGRect(ev.frame));
-            
+            [scoreVisNames addObject: currentVar.name];
             
             [ev updateViewForHour: _hoursAfterStorm.value];
             
@@ -318,11 +353,8 @@ bool passFirstThree = FALSE;
         float scoreWidth = [[scoreVisVals objectAtIndex: i] floatValue] * 150;
         totalScore += scoreWidth;
           UILabel * componentScore = [[UILabel alloc] initWithFrame:CGRectMake(maxX, (simRun.trialNum)*175 + 50, floor(scoreWidth), 20)];
-        if (i % 2 == 0){
-        [componentScore setBackgroundColor:[UIColor colorWithHue: 1.0/(0.5*i + 0.1) saturation:0.6 brightness:0.6 alpha:1.0]];
-        }
-        [componentScore setBackgroundColor:[UIColor colorWithHue: 1.0/(0.25*i - 0.1) saturation:0.6 brightness:0.6 alpha:1.0]];
-            [_dataWindow addSubview:componentScore];
+        componentScore.backgroundColor = [scoreColors objectForKey:[scoreVisNames objectAtIndex:i]];
+        [_dataWindow addSubview:componentScore];
         maxX+=floor(scoreWidth);
     }
 
@@ -383,7 +415,7 @@ bool passFirstThree = FALSE;
 
         AprilTestVariable * currentVar =[sortedArray objectAtIndex:i];
         UILabel * currentVarLabel = [[UILabel alloc] init];
-                if (visibleIndex % 2 == 0) currentVarLabel.backgroundColor = [UIColor colorWithRed:.8 green:.9 blue:1.0 alpha:.5];
+        currentVarLabel.backgroundColor = [scoreColors objectForKey:currentVar.name];
         currentVarLabel.frame = CGRectMake(width, 2, currentVar.widthOfVisualization - 10, 40);
         currentVarLabel.font = [UIFont boldSystemFontOfSize:15.3];
         if([currentVar.name compare: @"publicCost"] == NSOrderedSame){
