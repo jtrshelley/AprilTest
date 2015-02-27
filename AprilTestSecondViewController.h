@@ -22,5 +22,6 @@
 @property (strong, nonatomic) IBOutlet UILabel *thresholdValueLabel;
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
 @property (strong, nonatomic) IBOutlet UIPickerView *sortingPicker;
+@property (strong, nonatomic) NSMutableArray *scenarioNames;
 
 @end

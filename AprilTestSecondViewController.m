@@ -30,6 +30,7 @@
 @synthesize thresholdValueLabel = _thresholdValueLabel;
 @synthesize hoursAfterStormLabel = _hoursAfterStormLabel;
 @synthesize loadingIndicator = _loadingIndicator;
+@synthesize scenarioNames = _scenarioNames;
 
 NSMutableArray * trialRuns;
 NSMutableArray * trialRunsNormalized;
@@ -38,12 +39,16 @@ NSMutableArray * maxWaterDisplays;
 NSMutableArray * efficiency;
 NSMutableArray *lastKnownConcernProfile;
 NSMutableArray *bgCols;
-NSMutableArray *scenarioNames;
 UILabel *redThreshold;
 NSArray *arrStatus;
 NSMutableDictionary *scoreColors;
+int lastMoved = 0;
 int trialNum = 0;
 bool passFirstThree = FALSE;
+float kOFFSET_FOR_KEYBOARD = 425.0;
+float offsetForMoving = 0.0;
+float originalOffset = 0.0;
+UITextField *edittingTX;
 
 @synthesize currentConcernRanking = _currentConcernRanking;
 
@@ -59,7 +64,7 @@ bool passFirstThree = FALSE;
     waterDisplays = [[NSMutableArray alloc] init];
     maxWaterDisplays = [[NSMutableArray alloc] init];
     efficiency = [[NSMutableArray alloc] init];
-    scenarioNames = [[NSMutableArray alloc] init];
+    _scenarioNames = [[NSMutableArray alloc] init];
     _mapWindow.delegate = self;
     _dataWindow.delegate = self;
     _titleWindow.delegate = self;
@@ -117,6 +122,22 @@ bool passFirstThree = FALSE;
     [_dataWindow flashScrollIndicators];
     
 
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillShow)
+                                                 name:UIKeyboardWillShowNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillHide)
+                                                 name:UIKeyboardWillHideNotification
+                                               object:nil];
+    
+}
+
+- (void) viewWillDisappear:(BOOL)animated {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -132,8 +153,8 @@ bool passFirstThree = FALSE;
 - (void)loadNextSimulationRun{
 
     //_url = @"http://192.168.1.42";
-    //_url = @"http://127.0.0.1";
-    _url= @"http://131.193.79.217";
+    _url = @"http://127.0.0.1";
+    //_url= @"http://10.8.234.182";
     _studyNum = 6;
     NSString * urlPlusFile = [NSString stringWithFormat:@"%@/%@", _url, @"simOutput.php"];
     NSString *myRequestString = [[NSString alloc] initWithFormat:@"trialID=%d&studyID=%d", trialNum, _studyNum ];
@@ -169,7 +190,7 @@ bool passFirstThree = FALSE;
         //NSLog(@"error: %@", err);
         
         if( [returnDataN bytes]) contentN = [NSString stringWithUTF8String:[returnDataN bytes]];
-       NSLog(@"responseData: %@", contentN);
+       //NSLog(@"responseData: %@", contentN);
     }
     
     if(content != NULL && content.length > 100 && contentN != NULL){
@@ -188,15 +209,15 @@ bool passFirstThree = FALSE;
     //NSLog (@"Drawing trial number: %d", trial);
     AprilTestSimRun *simRun = [trialRuns objectAtIndex:trial];
     AprilTestNormalizedVariable *simRunNormal = [trialRunsNormalized objectAtIndex:trial];
-    FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial) +5, 115, 125))];
+    FebTestIntervention *interventionView = [[FebTestIntervention alloc] initWithPositionArray:simRun.map andFrame:(CGRectMake(20, 175 * (trial) + 40, 115, 125))];
     interventionView.view = _mapWindow;
     [interventionView updateView];
-    UILabel *trialLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-47, 0, 0)];
-    trialLabel.text = [NSString stringWithFormat:  @"Trial %d", trial + 1];
-    trialLabel.font = [UIFont systemFontOfSize:14.0];
-    [trialLabel sizeToFit];
-    trialLabel.textColor = [UIColor blackColor];
-    [_mapWindow addSubview:trialLabel];
+//    UILabel *trialLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-47, 0, 0)];
+//    trialLabel.text = [NSString stringWithFormat:  @"Trial %d", trial + 1];
+//    trialLabel.font = [UIFont systemFontOfSize:14.0];
+//    [trialLabel sizeToFit];
+//    trialLabel.textColor = [UIColor blackColor];
+//    [_mapWindow addSubview:trialLabel];
     [_mapWindow setContentSize: CGSizeMake(_mapWindow.contentSize.width, (simRun.trialNum+1)*200)];
     
     //int scoreBar=0;
@@ -208,8 +229,8 @@ bool passFirstThree = FALSE;
         priorityTotal += [(AprilTestVariable *)[_currentConcernRanking objectAtIndex:i] currentConcernRanking];
     }
     UITextField *tx;
-    if(trialNum >= scenarioNames.count){
-        tx = [[UITextField alloc] initWithFrame:CGRectMake(20, 175*(trial+1)-27, 150, 30)];
+    if(trial >= _scenarioNames.count){
+        tx = [[UITextField alloc] initWithFrame:CGRectMake(20, 175*(trial)+5, 245, 30)];
         tx.borderStyle = UITextBorderStyleRoundedRect;
         tx.font = [UIFont systemFontOfSize:15];
         tx.placeholder = @"enter text";
@@ -219,15 +240,16 @@ bool passFirstThree = FALSE;
         tx.clearButtonMode = UITextFieldViewModeWhileEditing;
         tx.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
         tx.delegate = self;
-        tx.text = trialLabel.text;
+        tx.text = [NSString stringWithFormat:  @"Trial %d", trial + 1];
         [_mapWindow addSubview:tx];
-        [scenarioNames addObject:tx];
+        [_scenarioNames addObject:tx];
     } else {
-        tx = [scenarioNames objectAtIndex:trialNum];
-        tx.frame = CGRectMake(20, 175*(trial+1)-27, 100, 30);
+        tx = [_scenarioNames objectAtIndex:trial];
+        tx.frame = CGRectMake(20, 175*(trial)+5, 245, 30);
+        [_mapWindow addSubview:tx];
     }
     
-    int width = 170;
+    int width = 0;
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     [formatter setNumberStyle:NSNumberFormatterDecimalStyle];
     
@@ -244,15 +266,17 @@ bool passFirstThree = FALSE;
         
         AprilTestVariable * currentVar =[sortedArray objectAtIndex:i];
         if(simRun.trialNum ==0 && visibleIndex %2 == 0 && currentVar.widthOfVisualization > 0){
-            UILabel *bgCol = [[UILabel alloc] initWithFrame:CGRectMake(width, 0, currentVar.widthOfVisualization - 10, _dataWindow.contentSize.height + 100)];
-            bgCol.backgroundColor = [UIColor colorWithRed:.8 green:.9 blue:1.0 alpha:.5];
+            UILabel *bgCol = [[UILabel alloc] initWithFrame:CGRectMake(width, -2, currentVar.widthOfVisualization - 10, _dataWindow.contentSize.height + 100)];
+            bgCol.backgroundColor = [UIColor whiteColor];
+            bgCol.layer.borderColor = [UIColor lightGrayColor].CGColor;
+            bgCol.layer.borderWidth = 2.0;
             [_dataWindow addSubview:bgCol];
             [bgCols addObject:bgCol];
         }
         if([currentVar.name compare: @"publicCost"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.publicInstallCost] ]]   withConcernPosition:width+25 andyValue: (simRun.trialNum) * 175 ];
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt: simRun.publicDamages]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175) +30];
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.publicMaintenanceCost]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +60];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.publicInstallCost] ]]   withConcernPosition:width+25 andyValue: (simRun.trialNum) * 175 + 20 ];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt: simRun.publicDamages]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175) +50];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.publicMaintenanceCost]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +80];
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicInstallCost);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.publicMaintenanceCost);
@@ -263,9 +287,9 @@ bool passFirstThree = FALSE;
             [scoreVisNames addObject: @"publicCostM"];
             [scoreVisNames addObject: @"publicCostD"];
         } else if ([currentVar.name compare: @"privateCost"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateInstallCost]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175)] ;
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateDamages]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum*175) +30];
-            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateMaintenanceCost]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) +60];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Installation Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateInstallCost]]] withConcernPosition:width +25 andyValue: (simRun.trialNum * 175 + 20)] ;
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Rain Damage: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateDamages]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum*175) +50];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"Maintenance Cost: $%@", [formatter stringFromNumber: [NSNumber numberWithInt:simRun.privateMaintenanceCost]]] withConcernPosition:width + 25 andyValue: (simRun.trialNum * 175) + 80];
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateInstallCost);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateDamages);
             scoreTotal += (currentVar.currentConcernRanking/3.0)/priorityTotal * (1 - simRunNormal.privateMaintenanceCost);
@@ -276,17 +300,17 @@ bool passFirstThree = FALSE;
             [scoreVisNames addObject: @"privateCostM"];
             [scoreVisNames addObject: @"privateCostD"];
         } else if ([currentVar.name compare: @"impactingMyNeighbors"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.impactNeighbors] withConcernPosition:width +50 andyValue: (simRun.trialNum ) * 175];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.impactNeighbors] withConcernPosition:width +50 andyValue: (simRun.trialNum ) * 175 + 50];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * (simRunNormal.impactNeighbors);
             [scoreVisVals addObject:[NSNumber numberWithFloat: currentVar.currentConcernRanking/priorityTotal * (simRunNormal.impactNeighbors)]];
             [scoreVisNames addObject: currentVar.name];
         } else if ([currentVar.name compare: @"neighborImpactingMe"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.neighborsImpactMe] withConcernPosition:width + 50 andyValue: (simRun.trialNum )* 175];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.neighborsImpactMe] withConcernPosition:width + 50 andyValue: (simRun.trialNum)*175 + 50];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * ( simRunNormal.neighborsImpactMe);
             [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal * ( simRunNormal.neighborsImpactMe)]];
             [scoreVisNames addObject: currentVar.name];
         } else if ([currentVar.name compare: @"groundwaterInfiltration"] == NSOrderedSame){
-            [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.infiltration] withConcernPosition:width + 50 andyValue: (simRun.trialNum)* 175 ];
+            [self drawTextBasedVar: [NSString stringWithFormat:@"%.2f%%", 100*simRun.infiltration] withConcernPosition:width + 50 andyValue: (simRun.trialNum)* 175 + 50 ];
             scoreTotal += currentVar.currentConcernRanking/priorityTotal * (1 - simRunNormal.infiltration);
             [scoreVisVals addObject:[NSNumber numberWithFloat:currentVar.currentConcernRanking/priorityTotal * (1 - simRunNormal.infiltration)]];
             [scoreVisNames addObject: currentVar.name];
@@ -342,20 +366,23 @@ bool passFirstThree = FALSE;
         width+= currentVar.widthOfVisualization;
         if (currentVar.widthOfVisualization > 0) visibleIndex++;
     }
-    UILabel *fullValue = [[UILabel alloc] initWithFrame:CGRectMake(10, (simRun.trialNum)*175 + 50,  150, 20)];
-    fullValue.backgroundColor = [UIColor lightGrayColor];
+    UILabel *fullValue = [[UILabel alloc] initWithFrame:CGRectMake(150, (simRun.trialNum)*175 + 90,  110, 22)];
+    fullValue.backgroundColor = [UIColor grayColor];
   
-    [_dataWindow addSubview:fullValue];
+    [_mapWindow addSubview:fullValue];
     //NSLog(@" %@", scoreVisVals);
-    float maxX = 10;
+    float maxX = 150.5;
     float totalScore = 0;
     for(int i =  0; i < scoreVisVals.count; i++){
-        float scoreWidth = [[scoreVisVals objectAtIndex: i] floatValue] * 150;
+        float scoreWidth = [[scoreVisVals objectAtIndex: i] floatValue] * 100;
+        if (scoreWidth < 0) scoreWidth = 0.5;
         totalScore += scoreWidth;
-          UILabel * componentScore = [[UILabel alloc] initWithFrame:CGRectMake(maxX, (simRun.trialNum)*175 + 50, floor(scoreWidth), 20)];
+          UILabel * componentScore = [[UILabel alloc] initWithFrame:CGRectMake(maxX, (simRun.trialNum)*175 + 90, floor(scoreWidth), 21)];
         componentScore.backgroundColor = [scoreColors objectForKey:[scoreVisNames objectAtIndex:i]];
-        [_dataWindow addSubview:componentScore];
-        maxX+=floor(scoreWidth);
+        componentScore.layer.borderWidth= .5;
+        componentScore.layer.borderColor= [UIColor grayColor].CGColor;
+        [_mapWindow addSubview:componentScore];
+        maxX+=floor(scoreWidth) + 1;
     }
 
     
@@ -368,22 +395,80 @@ bool passFirstThree = FALSE;
         }
     }
     
-    UILabel *scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, 175*(trial+1) - 47, 0, 0)];
-    scoreLabel.text = [NSString stringWithFormat:  @"Score %.2f", scoreTotal];
+    UILabel *scoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(150, 175*(trial) + 50, 0, 0)];
+    scoreLabel.text = [NSString stringWithFormat:  @"Score: %.0f / 100", totalScore];
     scoreLabel.font = [UIFont systemFontOfSize:14.0];
     [scoreLabel sizeToFit];
     scoreLabel.textColor = [UIColor blackColor];
     [_mapWindow addSubview:scoreLabel];
+    UILabel *scoreLabel2 = [[UILabel alloc] initWithFrame:CGRectMake(150, 175*(trial) + 75, 0, 0)];
+    scoreLabel2.text = [NSString stringWithFormat:  @"Broken down by source:"];
+    scoreLabel2.font = [UIFont systemFontOfSize:10.0];
+    [scoreLabel2 sizeToFit];
+    scoreLabel2.textColor = [UIColor blackColor];
+    [_mapWindow addSubview:scoreLabel2];
     
     
     [_dataWindow flashScrollIndicators];          
     
 }
 
+-(void)keyboardWillShow {
+    // Animate the current view out of the way
+    for (int i = 0; i < _scenarioNames.count; i++){
+        UITextField *tx = [_scenarioNames objectAtIndex:i];
+        if ( [tx isEditing]){
+            if ((tx.frame.origin.y - _mapWindow.contentOffset.y) > (self.view.frame.size.height - 450)){
+                lastMoved = 1;
+                edittingTX = tx;
+                [self setViewMovedUp:YES];
+            }
+        }
+    }
+    
+}
+
+-(void)keyboardWillHide {
+    
+       if(lastMoved == 1) [self setViewMovedUp:NO];
+    lastMoved = 0;
+
+}
+
+
+//method to move the view up/down whenever the keyboard is shown/dismissed
+-(void)setViewMovedUp:(BOOL)movedUp
+{
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationDuration:0.3]; // if you want to slide up the view
+    
+    CGPoint rect = self.mapWindow.contentOffset;
+    CGPoint rect2 = self.dataWindow.contentOffset;
+    
+    if (movedUp)
+    {
+        
+        originalOffset = rect.y;
+        rect.y += (edittingTX.frame.origin.y + _mapWindow.contentOffset.y) - 225;
+        rect2.y = rect.y;
+    }
+    else
+    {
+        // revert back to the normal state.
+        rect.y = originalOffset;
+        rect2.y = originalOffset;
+
+    }
+    self.mapWindow.contentOffset = rect;
+    self.dataWindow.contentOffset = rect2;
+    
+    [UIView commitAnimations];
+}
+
 -(void) drawTextBasedVar: (NSString *) outputValue withConcernPosition: (int) concernPos andyValue: (int) yValue{
     UILabel *valueLabel = [[UILabel alloc] init];
     valueLabel.text = outputValue;
-    valueLabel.frame =CGRectMake(concernPos, yValue+15, 0, 0);
+    valueLabel.frame =CGRectMake(concernPos, yValue, 0, 0);
     [valueLabel sizeToFit ];
     valueLabel.font = [UIFont systemFontOfSize:14.0];
     valueLabel.textColor = [UIColor blackColor];
@@ -400,15 +485,6 @@ bool passFirstThree = FALSE;
         if(first > second) return NSOrderedAscending;
         else return NSOrderedDescending;
     }];
-
-    UILabel * scoreLabel = [[UILabel alloc] init];
-    scoreLabel.frame = CGRectMake(width, 2, 170, 40);
-    scoreLabel.font = [UIFont boldSystemFontOfSize:16.0];
-    scoreLabel.text = @"  Score Breakdown";
-    [_titleWindow addSubview:scoreLabel];
-    width+=170;
-    
-    
     
     int visibleIndex = 0;
     for(int i = 0 ; i <_currentConcernRanking.count ; i++){
@@ -554,6 +630,9 @@ bool passFirstThree = FALSE;
         [file seekToEndOfFile];
         [file writeData:[content dataUsingEncoding:NSUTF8StringEncoding]];;
 }
+
+
+
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow: (NSInteger)row inComponent:(NSInteger)component {
     // Handle the selection
